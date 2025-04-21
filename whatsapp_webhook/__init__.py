@@ -5,6 +5,8 @@ import openai
 import os
 import logging
 
+logging.basicConfig(level=logging.INFO)
+
 # Required credentials (stored as App Settings in Azure)
 endpoint = os.getenv("CLU_ENDPOINT")
 prediction_key = os.getenv("CLU_KEY")
