@@ -15,8 +15,6 @@ prediction_key = os.getenv("CLU_KEY")
 project_name = os.getenv("CLU_PROJECT_NAME")
 deployment_name = os.getenv("CLU_DEPLOYMENT_NAME")
 
-
-
 openai.api_type = "azure"
 openai.api_base = os.getenv("OPENAI_ENDPOINT")
 openai.api_version = "2024-12-01-preview"
@@ -77,6 +75,38 @@ def get_intent(message: str):
         logging.error(f"❌ Error parsing CLU response: {str(e)}")
         raise
 
+def download_media(media_url: str, filename="media_file") -> str:
+    try:
+        twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+        twilio_account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+
+        if not twilio_auth_token or not twilio_account_sid:
+            raise ValueError("Twilio credentials not found in environment.")
+
+        response = requests.get(
+            media_url,
+            auth=(twilio_account_sid, twilio_auth_token)
+        )
+
+        if response.status_code != 200:
+            logging.error(f"Failed to download media: {response.status_code}")
+            return None
+
+        # Determine file extension from URL or content-type
+        extension = media_url.split(".")[-1].split("?")[0]
+        local_path = f"/tmp/{filename}.{extension}"
+
+        with open(local_path, "wb") as f:
+            f.write(response.content)
+
+        logging.info(f"✅ Media saved to: {local_path}")
+        return local_path
+
+    except Exception as e:
+        logging.error(f"❌ Error downloading media: {str(e)}", exc_info=True)
+        return None
+
+    
 def transcribe_audio_file(audio_path: str) -> str:
     try:
         speech_key = os.getenv("SPEECH_KEY_T8HD")
