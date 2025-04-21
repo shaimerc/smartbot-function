@@ -17,6 +17,14 @@ openai.api_version = "2024-03-01-preview"
 openai.api_key = os.getenv("OPENAI_KEY")
 openai_deployment = os.getenv("OPENAI_DEPLOYMENT")  # e.g., sjm-sig788-t8hd-gpt-4o
 
+logging.info(f"🔧 CLU_ENDPOINT = {endpoint}")
+logging.info(f"🔧 CLU_KEY = {prediction_key}")
+logging.info(f"🔧 CLU_PROJECT_NAME = {project_name}")
+logging.info(f"🔧 CLU_DEPLOYMENT_NAME = {deployment_name}")
+logging.info(f"🔧 OPENAI_ENDPOINT = {openai.api_base}")
+logging.info(f"🔧 OPENAI_KEY = {openai.api_key}")
+logging.info(f"🔧 OPENAI_DEPLOYMENT = {openai_deployment}")
+
 def get_intent(message: str):
     headers = {
         "Ocp-Apim-Subscription-Key": prediction_key,
