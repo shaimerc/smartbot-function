@@ -60,10 +60,23 @@ def get_intent(message: str):
     try:
         result = response.json()
         logging.info(f"🧠 CLU raw result: {result}")
+
         prediction = result.get("result", {}).get("prediction", {})
         top_intent = prediction.get("topIntent", "unknown")
-        confidence = prediction.get("intents", {}).get(top_intent, {}).get("confidenceScore", 0.0)
+        intents = prediction.get("intents")
+
+        # ✅ NEW: Handle both dict and list structures for intents
+        confidence = 0.0
+        if isinstance(intents, dict):
+            confidence = intents.get(top_intent, {}).get("confidenceScore", 0.0)
+        elif isinstance(intents, list):
+            for intent_item in intents:
+                if intent_item.get("category") == top_intent:
+                    confidence = intent_item.get("confidenceScore", 0.0)
+                    break
+
         return top_intent, confidence
+
     except Exception as e:
         logging.error(f"❌ Error parsing CLU response: {str(e)}")
         raise
