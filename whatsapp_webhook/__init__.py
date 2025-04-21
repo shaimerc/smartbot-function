@@ -105,7 +105,6 @@ def download_media(media_url: str, filename="media_file") -> str:
     except Exception as e:
         logging.error(f"❌ Error downloading media: {str(e)}", exc_info=True)
         return None
-
     
 def transcribe_audio_file(audio_path: str) -> str:
     try:
@@ -179,7 +178,6 @@ def extract_text_from_image(image_path: str) -> str:
         logging.error(f"❌ Exception in extract_text_from_image: {str(e)}", exc_info=True)
         return None
 
-
 client = AzureOpenAI(
     api_key=openai.api_key,
     api_version=openai.api_version,
@@ -202,38 +200,28 @@ def generate_response_azure(user_input: str, detected_intent: str):
         logging.error(f"❌ OpenAI Chat API error: {e}")
         return "Sorry, I couldn't generate a response."
 
-
-
 # ✅ This is the required main function Azure looks for
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("📩 Function triggered by HTTP request.")
 
-    # WhatsApp message basics
     sender = req.form.get('From')
     user_message = req.form.get('Body') or req.params.get('Body')
     num_media = int(req.form.get("NumMedia", 0))
 
-    # Log media presence
     logging.info(f"📨 Message from {sender}. Media Count: {num_media}")
 
-    # Handle media input (image or voice)
     if num_media > 0:
         media_url = req.form.get("MediaUrl0")
         media_type = req.form.get("MediaContentType0")
         logging.info(f"📷 Media received: {media_type} at {media_url}")
 
-        # Download media file
-        try:
-            response = requests.get(media_url)
-            extension = media_type.split("/")[-1].split(";")[0]
-            local_file_path = f"/tmp/media_input.{extension}"
-            with open(local_file_path, "wb") as f:
-                f.write(response.content)
-        except Exception as media_err:
-            logging.error(f"❌ Failed to download media file: {media_err}")
-            return func.HttpResponse("Failed to process uploaded media.", status_code=500)
+        # Download using Twilio credentials
+        local_file_path = download_media(media_url)
 
-        # Route based on type
+        if not local_file_path:
+            return func.HttpResponse("Media download failed.", status_code=500)
+
+        # Process voice or image
         if "audio" in media_type:
             user_message = transcribe_audio_file(local_file_path)
             logging.info(f"🗣️ Transcribed voice: {user_message}")
@@ -259,7 +247,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if not reply:
         reply = "Sorry, no response could be generated."
 
-    # Send reply to WhatsApp
+    # Respond to WhatsApp
     twilio_response = MessagingResponse()
     twilio_response.message(reply)
 
