@@ -5,6 +5,8 @@ import openai
 import os
 import logging
 
+from openai import AzureOpenAI
+
 logging.basicConfig(level=logging.INFO)
 
 # Required credentials (stored as App Settings in Azure)
@@ -73,18 +75,27 @@ def get_intent(message: str):
         logging.error(f"❌ Error parsing CLU response: {str(e)}")
         raise
 
-def generate_response_azure(user_input: str, detected_intent: str):
-    response = openai.ChatCompletion.create(
-        engine=openai_deployment,
-        messages=[
-            {"role": "system", "content": f"You are a smart customer assistant. The user's intent is: {detected_intent}"},
-            {"role": "user", "content": user_input}
-        ],
-        temperature=0.5,
-        max_tokens=500
-    )
+client = AzureOpenAI(
+    api_key=openai.api_key,
+    api_version=openai.api_version,
+    azure_endpoint=openai.api_base,
+)
 
-    return response["choices"][0]["message"]["content"]
+def generate_response_azure(user_input: str, detected_intent: str):
+    try:
+        response = client.chat.completions.create(
+            model=openai_deployment,
+            messages=[
+                {"role": "system", "content": f"You are a smart customer assistant. The user's intent is: {detected_intent}"},
+                {"role": "user", "content": user_input}
+            ],
+            temperature=0.5,
+            max_tokens=500
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        logging.error(f"❌ OpenAI Chat API error: {e}")
+        return "Sorry, I couldn't generate a response."
 
 # ✅ This is the required main function Azure looks for
 def main(req: func.HttpRequest) -> func.HttpResponse:
