@@ -81,7 +81,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         logging.info(f"🟢 Twilio XML: {str(twilio_response)}")
 
-        return func.HttpResponse(str(twilio_response), mimetype="application/xml")
+        return func.HttpResponse(reply, mimetype="text/plain")
+
+        # return func.HttpResponse(str(twilio_response), mimetype="application/xml")
 
     except Exception as e:
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
