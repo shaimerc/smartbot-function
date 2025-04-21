@@ -4,6 +4,8 @@ import requests
 import openai
 import os
 import logging
+import mimetypes
+import uuid
 
 from openai import AzureOpenAI
 
@@ -92,9 +94,10 @@ def download_media(media_url: str, filename="media_file") -> str:
             logging.error(f"Failed to download media: {response.status_code}")
             return None
 
-        # Determine file extension from URL or content-type
-        extension = media_url.split(".")[-1].split("?")[0]
-        local_path = f"/tmp/{filename}.{extension}"
+        content_type = response.headers.get("Content-Type", "application/octet-stream")
+        extension = mimetypes.guess_extension(content_type) or ".bin"
+        unique_id = uuid.uuid4().hex
+        local_path = f"/tmp/{filename}_{unique_id}{extension}"
 
         with open(local_path, "wb") as f:
             f.write(response.content)
