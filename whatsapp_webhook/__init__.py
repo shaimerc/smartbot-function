@@ -77,21 +77,50 @@ def generate_response_azure(user_input: str, detected_intent: str):
 # ✅ This is the required main function Azure looks for
 def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        user_message = req.form.get('Body')
+        logging.info("📩 Function triggered by HTTP request.")
+
+        # Pull user message
+        user_message = req.form.get('Body') or req.params.get('Body')
         sender = req.form.get('From')
 
-        intent, _ = get_intent(user_message)
-        reply = generate_response_azure(user_message, intent)
+        logging.info(f"📨 Received message from {sender}: {user_message}")
 
+        # Confirm environment variables are loaded
+        if not all([endpoint, prediction_key, project_name, deployment_name,
+                    openai.api_base, openai.api_key, openai_deployment]):
+            logging.error("🚨 One or more environment variables are missing!")
+            return func.HttpResponse("Server error: Missing environment variables.", status_code=500)
+
+        # Try calling CLU
+        try:
+            intent, confidence = get_intent(user_message)
+            logging.info(f"🎯 Detected intent: {intent} (confidence: {confidence:.2f})")
+        except Exception as clu_err:
+            logging.error(f"❌ Error calling CLU: {clu_err}")
+            return func.HttpResponse(f"CLU Error: {str(clu_err)}", status_code=500)
+
+        # Try generating response
+        try:
+            reply = generate_response_azure(user_message, intent)
+            logging.info(f"💬 GPT reply: {reply}")
+        except Exception as openai_err:
+            logging.error(f"❌ Error calling OpenAI: {openai_err}")
+            reply = "Sorry, I couldn't generate a response."
+
+        # Final fallback
         if not reply:
-            reply = "Sorry, I couldn’t generate a response at the moment."
+            reply = "Sorry, no response could be generated."
 
+        # Build Twilio-compatible reply
         twilio_response = MessagingResponse()
         twilio_response.message(reply)
+        logging.info(f"✅ Final XML: {str(twilio_response)}")
 
-        logging.info(f"🟢 Twilio XML: {str(twilio_response)}")
+        return func.HttpResponse(str(twilio_response), mimetype="application/xml")
 
-        return func.HttpResponse(reply, mimetype="text/plain")
+    except Exception as e:
+        logging.error(f"❌ Unhandled exception: {str(e)}")
+        return func.HttpResponse(f"Error: {str(e)}", status_code=500)
 
         # return func.HttpResponse(str(twilio_response), mimetype="application/xml")
 
