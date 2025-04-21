@@ -56,10 +56,17 @@ def get_intent(message: str):
         headers=headers,
         json=body
     )
-    result = response.json()
-    intent = result["result"]["prediction"]["topIntent"]
-    confidence = result["result"]["prediction"]["intents"][intent]["confidenceScore"]
-    return intent, confidence
+
+    try:
+        result = response.json()
+        logging.info(f"🧠 CLU raw result: {result}")
+        prediction = result.get("result", {}).get("prediction", {})
+        top_intent = prediction.get("topIntent", "unknown")
+        confidence = prediction.get("intents", {}).get(top_intent, {}).get("confidenceScore", 0.0)
+        return top_intent, confidence
+    except Exception as e:
+        logging.error(f"❌ Error parsing CLU response: {str(e)}")
+        raise
 
 def generate_response_azure(user_input: str, detected_intent: str):
     response = openai.ChatCompletion.create(
