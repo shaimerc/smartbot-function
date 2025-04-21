@@ -15,7 +15,7 @@ deployment_name = os.getenv("CLU_DEPLOYMENT_NAME")
 
 openai.api_type = "azure"
 openai.api_base = os.getenv("OPENAI_ENDPOINT")
-openai.api_version = "2024-03-01-preview"
+openai.api_version = "2024-12-01-preview"
 openai.api_key = os.getenv("OPENAI_KEY")
 openai_deployment = os.getenv("OPENAI_DEPLOYMENT")  # e.g., sjm-sig788-t8hd-gpt-4o
 
@@ -124,8 +124,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             reply = generate_response_azure(user_message, intent)
             logging.info(f"💬 GPT reply: {reply}")
         except Exception as openai_err:
-            logging.error(f"❌ Error calling OpenAI: {openai_err}")
-            reply = "Sorry, I couldn't generate a response."
+            logging.error(f"❌ Error calling OpenAI: {openai_err}", exc_info=True)
+            reply = "Sorry, I couldn't generate a response, OpenAI Issue."
 
         # Final fallback
         if not reply:
