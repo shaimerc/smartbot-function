@@ -3,6 +3,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 import requests
 import openai
 import os
+import logging
 
 # Required credentials (stored as App Settings in Azure)
 endpoint = os.getenv("CLU_ENDPOINT")
@@ -72,8 +73,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         intent, _ = get_intent(user_message)
         reply = generate_response_azure(user_message, intent)
 
+        if not reply:
+            reply = "Sorry, I couldn’t generate a response at the moment."
+
         twilio_response = MessagingResponse()
         twilio_response.message(reply)
+
+        logging.info(f"🟢 Twilio XML: {str(twilio_response)}")
 
         return func.HttpResponse(str(twilio_response), mimetype="application/xml")
 
