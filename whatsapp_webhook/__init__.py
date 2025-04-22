@@ -127,31 +127,31 @@ def convert_to_wav(input_path: str) -> str:
     
 def transcribe_audio_file(audio_path: str) -> str:
     try:
-        wav_path = convert_to_wav(audio_path)
-        if not wav_path:
+        logging.info(f"🔊 Transcribing with Whisper (OpenAI public): {audio_path}")
+
+        # Public OpenAI Whisper configuration
+        whisper_key = os.getenv("OPENAI_PUBLIC_KEY")
+        if not whisper_key:
+            logging.error("❌ OPENAI_PUBLIC_KEY not set.")
             return None
 
-        speech_key = os.getenv("SPEECH_KEY_T8HD")
-        speech_region = os.getenv("SPEECH_REGION_T8HD")
+        openai.api_type = "openai"
+        openai.api_base = "https://api.openai.com/v1"
+        openai.api_key = whisper_key
 
-        speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
-        audio_config = speechsdk.audio.AudioConfig(filename=wav_path)
-        recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+        with open(audio_path, "rb") as audio_file:
+            response = openai.Audio.transcribe(
+                model="whisper-1",
+                file=audio_file
+            )
 
-        logging.info(f"🔊 Transcribing: {wav_path}")
-        result = recognizer.recognize_once()
-
-        if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-            logging.info(f"✅ Recognized speech: {result.text}")
-            return result.text.strip() if result.text and result.text.strip() else None
-        else:
-            logging.warning(f"⚠️ Speech recognition failed: {result.reason}")
-            return None
+        transcription = response.get("text", "").strip()
+        logging.info(f"📝 Whisper transcription: {transcription}")
+        return transcription if transcription else None
 
     except Exception as e:
-        logging.error(f"❌ Exception in transcribe_audio_file: {str(e)}", exc_info=True)
+        logging.error(f"❌ Whisper transcription failed: {e}", exc_info=True)
         return None
-
 
 def extract_text_from_image(image_path: str) -> str:
     try:
