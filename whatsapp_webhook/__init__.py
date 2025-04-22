@@ -8,8 +8,6 @@ import mimetypes
 import uuid
 import time
 
-from pydub import AudioSegment
-
 import azure.cognitiveservices.speech as speechsdk
 
 from openai import AzureOpenAI
@@ -112,17 +110,6 @@ def download_media(media_url: str, filename="media_file") -> str:
 
     except Exception as e:
         logging.error(f"❌ Error downloading media: {str(e)}", exc_info=True)
-        return None
-
-def convert_to_wav(input_path: str) -> str:
-    try:
-        output_path = f"/tmp/{uuid.uuid4().hex}.wav"
-        audio = AudioSegment.from_file(input_path, format="ogg")
-        audio.export(output_path, format="wav")
-        logging.info(f"✅ Audio converted to WAV: {output_path}")
-        return output_path
-    except Exception as e:
-        logging.error(f"❌ Audio conversion failed: {str(e)}", exc_info=True)
         return None
     
 def transcribe_audio_file(audio_path: str) -> str:
