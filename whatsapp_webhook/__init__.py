@@ -10,7 +10,7 @@ import time
 
 import azure.cognitiveservices.speech as speechsdk
 
-from openai import AzureOpenAI
+from openai import AzureOpenAI, OpenAI
 
 logging.basicConfig(level=logging.INFO)
 
@@ -116,29 +116,27 @@ def transcribe_audio_file(audio_path: str) -> str:
     try:
         logging.info(f"🔊 Transcribing with Whisper (OpenAI public): {audio_path}")
 
-        # Public OpenAI Whisper configuration
         whisper_key = os.getenv("OPENAI_PUBLIC_KEY")
         if not whisper_key:
             logging.error("❌ OPENAI_PUBLIC_KEY not set.")
             return None
 
-        openai.api_type = "openai"
-        openai.api_base = "https://api.openai.com/v1"
-        openai.api_key = whisper_key
+        whisper_client = OpenAI(api_key=whisper_key)
 
         with open(audio_path, "rb") as audio_file:
-            response = openai.Audio.transcribe(
+            response = whisper_client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file
             )
 
-        transcription = response.get("text", "").strip()
+        transcription = response.text.strip()
         logging.info(f"📝 Whisper transcription: {transcription}")
         return transcription if transcription else None
 
     except Exception as e:
         logging.error(f"❌ Whisper transcription failed: {e}", exc_info=True)
         return None
+
 
 def extract_text_from_image(image_path: str) -> str:
     try:
