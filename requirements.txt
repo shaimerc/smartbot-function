@@ -3,3 +3,5 @@ twilio
 requests
 openai
 azure-cognitiveservices-speech==1.31.0
+pydub
+ffmpeg-python
