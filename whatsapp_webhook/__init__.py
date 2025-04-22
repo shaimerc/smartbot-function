@@ -123,7 +123,7 @@ def transcribe_audio_file(audio_path: str) -> str:
 
         if result.reason == speechsdk.ResultReason.RecognizedSpeech:
             logging.info(f"✅ Recognized speech: {result.text}")
-            return result.text
+            return result.text.strip() if result.text else None
         else:
             logging.warning(f"⚠️ Speech recognition failed. Reason: {result.reason}")
             return None
@@ -166,7 +166,7 @@ def extract_text_from_image(image_path: str) -> str:
                         lines.append(line["text"])
                 extracted_text = "\n".join(lines)
                 logging.info(f"✅ OCR extracted text: {extracted_text}")
-                return extracted_text
+                return extracted_text.strip() if extracted_text else None
 
             elif status == "failed":
                 logging.warning("⚠️ OCR request failed.")
@@ -220,6 +220,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         # Download using Twilio credentials
         local_file_path = download_media(media_url)
+        logging.info(f"📂 Downloaded file path: {local_file_path}")
 
         if not local_file_path:
             return func.HttpResponse("Media download failed.", status_code=500)
@@ -233,6 +234,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.info(f"🖼️ Extracted text: {user_message}")
 
     if not user_message:
+        logging.warning("⚠️ No usable content extracted from media.")
         return func.HttpResponse("No usable message found.", status_code=200)
 
     # CLU intent recognition
