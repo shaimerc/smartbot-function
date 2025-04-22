@@ -6,6 +6,7 @@ import os
 import logging
 import mimetypes
 import uuid
+import time
 
 from openai import AzureOpenAI
 
