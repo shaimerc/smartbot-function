@@ -123,7 +123,7 @@ def transcribe_audio_file(audio_path: str) -> str:
 
         if result.reason == speechsdk.ResultReason.RecognizedSpeech:
             logging.info(f"✅ Recognized speech: {result.text}")
-            return result.text.strip() if result.text else None
+            return result.text.strip() if result.text and result.text.strip() else None
         else:
             logging.warning(f"⚠️ Speech recognition failed. Reason: {result.reason}")
             return None
@@ -166,8 +166,7 @@ def extract_text_from_image(image_path: str) -> str:
                         lines.append(line["text"])
                 extracted_text = "\n".join(lines)
                 logging.info(f"✅ OCR extracted text: {extracted_text}")
-                return extracted_text.strip() if extracted_text else None
-
+                return extracted_text.strip() if extracted_text and extracted_text.strip() else None
             elif status == "failed":
                 logging.warning("⚠️ OCR request failed.")
                 return None
