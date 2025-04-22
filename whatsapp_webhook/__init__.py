@@ -8,6 +8,8 @@ import mimetypes
 import uuid
 import time
 
+from pydub import AudioSegment
+
 import azure.cognitiveservices.speech as speechsdk
 
 from openai import AzureOpenAI
@@ -111,29 +113,45 @@ def download_media(media_url: str, filename="media_file") -> str:
     except Exception as e:
         logging.error(f"❌ Error downloading media: {str(e)}", exc_info=True)
         return None
+
+def convert_to_wav(input_path: str) -> str:
+    try:
+        output_path = f"/tmp/{uuid.uuid4().hex}.wav"
+        audio = AudioSegment.from_file(input_path, format="ogg")
+        audio.export(output_path, format="wav")
+        logging.info(f"✅ Audio converted to WAV: {output_path}")
+        return output_path
+    except Exception as e:
+        logging.error(f"❌ Audio conversion failed: {str(e)}", exc_info=True)
+        return None
     
 def transcribe_audio_file(audio_path: str) -> str:
     try:
+        wav_path = convert_to_wav(audio_path)
+        if not wav_path:
+            return None
+
         speech_key = os.getenv("SPEECH_KEY_T8HD")
         speech_region = os.getenv("SPEECH_REGION_T8HD")
 
         speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
-        audio_config = speechsdk.audio.AudioConfig(filename=audio_path)
+        audio_config = speechsdk.audio.AudioConfig(filename=wav_path)
         recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
-        logging.info(f"🔊 Transcribing audio file: {audio_path}")
+        logging.info(f"🔊 Transcribing: {wav_path}")
         result = recognizer.recognize_once()
 
         if result.reason == speechsdk.ResultReason.RecognizedSpeech:
             logging.info(f"✅ Recognized speech: {result.text}")
             return result.text.strip() if result.text and result.text.strip() else None
         else:
-            logging.warning(f"⚠️ Speech recognition failed. Reason: {result.reason}")
+            logging.warning(f"⚠️ Speech recognition failed: {result.reason}")
             return None
 
     except Exception as e:
         logging.error(f"❌ Exception in transcribe_audio_file: {str(e)}", exc_info=True)
         return None
+
 
 def extract_text_from_image(image_path: str) -> str:
     try:
