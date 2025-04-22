@@ -8,6 +8,8 @@ import mimetypes
 import uuid
 import time
 
+import azure.cognitiveservices.speech as speechsdk
+
 from openai import AzureOpenAI
 
 logging.basicConfig(level=logging.INFO)
