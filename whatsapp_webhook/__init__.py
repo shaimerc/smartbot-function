@@ -199,11 +199,11 @@ def generate_response_azure(user_input: str, detected_intent: str):
         response = client.chat.completions.create(
             model=openai_deployment,
             messages=[
-                {"role": "system", "content": f"You are a smart customer assistant. The user's intent is: {detected_intent}"},
+                {"role": "system", "content": f"You are a smart customer assistant. Please limit your answer to under 1590 characters. The user's intent is: {detected_intent}"},
                 {"role": "user", "content": user_input}
             ],
             temperature=0.5,
-            max_tokens=500
+            max_tokens=400
         )
         return response.choices[0].message.content
     except Exception as e:
