@@ -1,5 +1,6 @@
 import azure.functions as func
 from twilio.twiml.messaging_response import MessagingResponse
+import openai
 from openai import AzureOpenAI, OpenAI
 import requests
 import os
