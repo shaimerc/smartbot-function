@@ -1,5 +1,5 @@
 azure-functions
 twilio
 requests
-openai==0.28.1
+openai
 azure-cognitiveservices-speech==1.31.0
